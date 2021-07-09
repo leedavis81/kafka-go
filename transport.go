@@ -351,10 +351,15 @@ func (p *connPool) roundTrip(ctx context.Context, req Request) (Response, error)
 
 	switch m := req.(type) {
 	case *meta.Request:
-		// We serve metadata requests directly from the transport cache.
+		// We serve metadata requests directly from the transport cache unless
+		// we are explicitly requesting auto-topic creation.
 		//
 		// This reduces the number of round trips to kafka brokers while keeping
 		// the logic simple when applying partitioning strategies.
+		if m.AllowAutoTopicCreation {
+			expectTopics = append(expectTopics, m.TopicNames...)
+			break
+		}
 		if state.err != nil {
 			return nil, state.err
 		}
