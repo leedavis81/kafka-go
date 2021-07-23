@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/segmentio/kafka-go"
+	"github.com/leedavis81/kafka-go"
 	"github.com/leedavis81/kafka-go/sasl"
 	"github.com/leedavis81/kafka-go/sasl/plain"
 	"github.com/leedavis81/kafka-go/sasl/scram"

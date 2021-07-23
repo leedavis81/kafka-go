@@ -16,7 +16,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	kafka "github.com/segmentio/kafka-go"
+	kafka "github.com/leedavis81/kafka-go"
 	pkg "github.com/leedavis81/kafka-go/compress"
 	"github.com/leedavis81/kafka-go/compress/gzip"
 	"github.com/leedavis81/kafka-go/compress/lz4"
