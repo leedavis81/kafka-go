@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/segmentio/kafka-go"
-	ktesting "github.com/segmentio/kafka-go/testing"
+	ktesting "github.com/leedavis81/kafka-go/testing"
 )
 
 func TestListReNil(t *testing.T) {

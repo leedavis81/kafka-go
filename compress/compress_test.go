@@ -17,12 +17,12 @@ import (
 	"time"
 
 	kafka "github.com/segmentio/kafka-go"
-	pkg "github.com/segmentio/kafka-go/compress"
-	"github.com/segmentio/kafka-go/compress/gzip"
-	"github.com/segmentio/kafka-go/compress/lz4"
-	"github.com/segmentio/kafka-go/compress/snappy"
-	"github.com/segmentio/kafka-go/compress/zstd"
-	ktesting "github.com/segmentio/kafka-go/testing"
+	pkg "github.com/leedavis81/kafka-go/compress"
+	"github.com/leedavis81/kafka-go/compress/gzip"
+	"github.com/leedavis81/kafka-go/compress/lz4"
+	"github.com/leedavis81/kafka-go/compress/snappy"
+	"github.com/leedavis81/kafka-go/compress/zstd"
+	ktesting "github.com/leedavis81/kafka-go/testing"
 )
 
 func init() {

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/segmentio/kafka-go/protocol"
+	"github.com/leedavis81/kafka-go/protocol"
 )
 
 func deepEqual(x1, x2 interface{}) bool {
