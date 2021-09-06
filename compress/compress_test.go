@@ -16,7 +16,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	kafka "github.com/leedavis81/kafka-go"
+	"github.com/leedavis81/kafka-go"
 	pkg "github.com/leedavis81/kafka-go/compress"
 	"github.com/leedavis81/kafka-go/compress/gzip"
 	"github.com/leedavis81/kafka-go/compress/lz4"
@@ -147,7 +147,7 @@ func testCompressedMessages(t *testing.T, codec pkg.Codec) {
 				}
 				offset++
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			if err := w.WriteMessages(ctx, batch...); err != nil {
 				t.Errorf("error sending batch %d, reason: %+v", i+1, err)
 			}
