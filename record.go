@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"github.com/segmentio/kafka-go/protocol"
+	"github.com/leedavis81/kafka-go/protocol"
 )
 
 // Header is a key/value pair type representing headers set on records.
