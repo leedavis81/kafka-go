@@ -105,6 +105,10 @@ func makeGroupID() string {
 	return fmt.Sprintf("kafka-go-group-%016x", rand.Int63())
 }
 
+func makeTransactionalID() string {
+	return fmt.Sprintf("kafka-go-transactional-id-%016x", rand.Int63())
+}
+
 func TestConn(t *testing.T) {
 	tests := []struct {
 		scenario   string
@@ -195,12 +199,6 @@ func TestConn(t *testing.T) {
 		{
 			scenario: "read a batch using explicit max wait time",
 			function: testConnReadBatchWithMaxWait,
-		},
-
-		{
-			scenario:   "describe groups retrieves all groups when no groupID specified",
-			function:   testConnDescribeGroupRetrievesAllGroups,
-			minVersion: "0.11.0",
 		},
 
 		{
@@ -324,13 +322,13 @@ func TestConn(t *testing.T) {
 		t.Parallel()
 
 		nettest.TestConn(t, func() (c1 net.Conn, c2 net.Conn, stop func(), err error) {
-			var topic1 = makeTopic()
-			var topic2 = makeTopic()
+			topic1 := makeTopic()
+			topic2 := makeTopic()
 			var t1Reader *Conn
 			var t2Reader *Conn
 			var t1Writer *Conn
 			var t2Writer *Conn
-			var dialer = &Dialer{}
+			dialer := &Dialer{}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -378,7 +376,6 @@ func testConnFirstOffset(t *testing.T, conn *Conn) {
 func testConnWrite(t *testing.T, conn *Conn) {
 	b := []byte("Hello World!")
 	n, err := conn.Write(b)
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -732,26 +729,6 @@ func createGroup(t *testing.T, conn *Conn, groupID string) (generationID int32, 
 	return
 }
 
-func testConnDescribeGroupRetrievesAllGroups(t *testing.T, conn *Conn) {
-	groupID := makeGroupID()
-	_, _, stop1 := createGroup(t, conn, groupID)
-	defer stop1()
-
-	out, err := conn.describeGroups(describeGroupsRequestV0{
-		GroupIDs: []string{groupID},
-	})
-	if err != nil {
-		t.Fatalf("bad describeGroups: %s", err)
-	}
-
-	if v := len(out.Groups); v != 1 {
-		t.Fatalf("expected 1 group, got %v", v)
-	}
-	if id := out.Groups[0].GroupID; id != groupID {
-		t.Errorf("bad group: got %v, expected %v", id, groupID)
-	}
-}
-
 func testConnFindCoordinator(t *testing.T, conn *Conn) {
 	groupID := makeGroupID()
 
@@ -952,11 +929,10 @@ func testConnFetchAndCommitOffsets(t *testing.T, conn *Conn) {
 }
 
 func testConnWriteReadConcurrently(t *testing.T, conn *Conn) {
-
 	const N = 1000
-	var msgs = make([]string, N)
-	var done = make(chan struct{})
-	var written = make(chan struct{}, N/10)
+	msgs := make([]string, N)
+	done := make(chan struct{})
+	written := make(chan struct{}, N/10)
 
 	for i := 0; i != N; i++ {
 		msgs[i] = strconv.Itoa(i)
@@ -1344,5 +1320,39 @@ func TestEmptyToNullableLeavesStringsIntact(t *testing.T) {
 	r := emptyToNullable(s)
 	if *r != s {
 		t.Error("Non empty string is not equal to the original string")
+	}
+}
+
+func TestMakeBrokersAllPresent(t *testing.T) {
+	brokers := make(map[int32]Broker)
+	brokers[1] = Broker{ID: 1, Host: "203.0.113.101", Port: 9092}
+	brokers[2] = Broker{ID: 1, Host: "203.0.113.102", Port: 9092}
+	brokers[3] = Broker{ID: 1, Host: "203.0.113.103", Port: 9092}
+
+	b := makeBrokers(brokers, 1, 2, 3)
+	if len(b) != 3 {
+		t.Errorf("Expected 3 brokers, got %d", len(b))
+	}
+	for _, i := range []int32{1, 2, 3} {
+		if b[i-1] != brokers[i] {
+			t.Errorf("Expected broker %d at index %d, got %d", i, i-1, b[i].ID)
+		}
+	}
+}
+
+func TestMakeBrokersOneMissing(t *testing.T) {
+	brokers := make(map[int32]Broker)
+	brokers[1] = Broker{ID: 1, Host: "203.0.113.101", Port: 9092}
+	brokers[3] = Broker{ID: 1, Host: "203.0.113.103", Port: 9092}
+
+	b := makeBrokers(brokers, 1, 2, 3)
+	if len(b) != 2 {
+		t.Errorf("Expected 2 brokers, got %d", len(b))
+	}
+	if b[0] != brokers[1] {
+		t.Errorf("Expected broker 1 at index 0, got %d", b[0].ID)
+	}
+	if b[1] != brokers[3] {
+		t.Errorf("Expected broker 3 at index 1, got %d", b[1].ID)
 	}
 }
