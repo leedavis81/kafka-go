@@ -228,7 +228,13 @@ func (batch *Batch) readMessage(
 	offset, timestamp, headers, err = batch.msgs.readMessage(batch.offset, key, val)
 	switch err {
 	case nil:
-		batch.offset = offset + 1
+		// only increment the batch.offset where it's lower than the returned offset
+		// from the readMessage call. This is because we could have batches with multiple
+		// compacted records, and the advancement in the errShortRead case will be negated
+		// where the number of compacted records is greater than one
+		if batch.offset <= offset {
+			batch.offset = offset + 1
+		}
 	case errShortRead:
 		// As an "optimization" kafka truncates the returned response after
 		// producing MaxBytes, which could then cause the code to return
@@ -243,6 +249,19 @@ func (batch *Batch) readMessage(
 			// consumed or a batch whose connection is in an error state.
 			batch.err = dontExpectEOF(err)
 		case batch.msgs.remaining() == 0:
+			// Log compaction can create batches with 0 messages.
+			//
+			// If the "next offset" reaches the "originally requested offset"
+			// and we have 0 messages remaining, then there were 0 messages in
+			// the batch.
+			//
+			// We normally set the batch offset to the "next" batch offset upon
+			// reading a message but since there were no messages to read we
+			// update it now instead.
+			if batch.offset == batch.conn.offset {
+				batch.offset++
+			}
+
 			// Because we use the adjusted deadline we could end up returning
 			// before the actual deadline occurred. This is necessary otherwise
 			// timing out the connection for real could end up leaving it in an
